@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://127.0.0.1:8977/login)",
+      "Bash(php -l app/Models/Client.php)",
+      "Bash(cp .env .env.backup)",
+      "Bash(cp database/database.sqlite database/test.sqlite)",
+      "Bash(touch database/test.sqlite)",
+      "Bash(cp .env .env.bak)",
+      "Bash(awk '{ *)",
+      "Bash(printf '%%PDF-1.4\\\\n1 *)",
+      "Bash(cat 'C:\\\\Users\\\\Asus\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Asus-Downloads-lead-management-laravel10-super-admin\\\\fb9d510e-06f8-4ad9-9a28-0439585bb060\\\\scratchpad/testfile.pdf')",
+      "Bash(file 'C:\\\\Users\\\\Asus\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Asus-Downloads-lead-management-laravel10-super-admin\\\\fb9d510e-06f8-4ad9-9a28-0439585bb060\\\\scratchpad/testfile.pdf')",
+      "Bash(true)",
+      "Bash(curl -s -o /dev/null -w 'BILLING_STATUS:%{http_code}\\\\n' -b /tmp/cookies.txt __TRACKED_VAR__/client/billing)",
+      "Bash(curl -s -o /dev/null -w 'SUBSCRIBE_STATUS:%{http_code}\\\\n' -b /tmp/cookies.txt __TRACKED_VAR__/client/subscribe)",
+      "Bash(curl -s -o /dev/null -w 'LEADS_INDEX_STATUS:%{http_code}\\\\n' -b /tmp/cookies.txt __TRACKED_VAR__/client/leads)",
+      "Bash(cp .env.bak .env)",
+      "Bash(rm -f .env.bak)",
+      "Bash(rm -f database/test.sqlite)",
+      "Bash(rm -f /tmp/cookies.txt /tmp/admin_cookies.txt /tmp/login_resp.html /tmp/upload_resp.html /tmp/bulk_resp.html /tmp/export.csv /tmp/downloaded.pdf /tmp/serve.log /tmp/testfile.pdf)"
+    ]
+  }
+}
