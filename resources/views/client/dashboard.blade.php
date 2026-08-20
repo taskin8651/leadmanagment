@@ -23,6 +23,73 @@
     <div class="col-6 col-xl-3"><x-stat-card icon="bi-alarm" label="Overdue Follow-ups" :value="$overdueFollowUps" color="{{ $overdueFollowUps > 0 ? 'warning' : 'success' }}" /></div>
 </div>
 
+<div class="card fade-up mb-4">
+    <div class="p-4 pb-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h6 class="fw-bold mb-1"><i class="bi bi-telephone-outbound me-1"></i>Today's Calls</h6>
+            <div class="muted small">Leads scheduled — including rescheduled ones — for you to call today</div>
+        </div>
+        <a href="{{ route('client.follow-ups.index', ['when' => 'today']) }}" class="btn btn-ghost btn-sm">View all</a>
+    </div>
+    @if($todaysCalls->isEmpty())
+        <x-empty-state icon="bi-calendar2-check" title="No calls scheduled for today" description="Follow-ups due today will show up here so you never miss a call." />
+    @else
+        <div class="table-responsive d-none d-md-block">
+            <table class="table table-modern mb-0">
+                <thead><tr><th>Lead</th><th>Time</th><th>Type</th><th></th><th class="text-end">Action</th></tr></thead>
+                <tbody>
+                @foreach($todaysCalls as $f)
+                    @php($overdueToday = $f->follow_up_at->isPast())
+                    <tr style="{{ $overdueToday ? 'background:var(--warning-soft)' : '' }}">
+                        <td><a class="row-title text-decoration-none" href="{{ route('client.leads.show',$f->lead) }}">{{ $f->lead->name }}</a><div class="row-sub">{{ $f->lead->phone }}</div></td>
+                        <td>{{ $f->follow_up_at->format('h:i A') }}</td>
+                        <td>{{ $f->type }}</td>
+                        <td>@if($f->reschedule_count > 0)<span class="badge badge-warning">Rescheduled ×{{ $f->reschedule_count }}</span>@endif</td>
+                        <td class="text-end">
+                            <div class="d-flex gap-1 justify-content-end">
+                                <a href="tel:{{ $f->lead->phone }}" class="btn btn-sm btn-light"><i class="bi bi-telephone"></i></a>
+                                @can('edit_leads')
+                                <button type="button" class="btn btn-sm btn-light" data-role="reschedule-btn" data-action="{{ route('client.follow-ups.reschedule',$f) }}" data-current="{{ $f->follow_up_at->format('Y-m-d\TH:i') }}" data-lead="{{ $f->lead->name }}"><i class="bi bi-arrow-repeat"></i></button>
+                                @endcan
+                                @can('complete_followups')
+                                <form method="POST" action="{{ route('client.follow-ups.complete',$f) }}" data-role="complete-form">@csrf
+                                    <button class="btn btn-sm btn-primary" data-role="complete-btn"><i class="bi bi-check2"></i></button>
+                                </form>
+                                @endcan
+                            </div>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        </div>
+        <div class="d-md-none d-flex flex-column gap-2 p-3">
+            @foreach($todaysCalls as $f)
+                <div class="entity-card">
+                    <div class="top">
+                        <div class="flex-grow-1">
+                            <a class="row-title text-decoration-none d-block" href="{{ route('client.leads.show',$f->lead) }}">{{ $f->lead->name }}</a>
+                            <div class="row-sub">{{ $f->lead->phone }} · {{ $f->follow_up_at->format('h:i A') }}</div>
+                        </div>
+                        @if($f->reschedule_count > 0)<span class="badge badge-warning">×{{ $f->reschedule_count }}</span>@endif
+                    </div>
+                    <div class="actions-row d-flex gap-2">
+                        <a href="tel:{{ $f->lead->phone }}" class="btn btn-light btn-sm flex-grow-1"><i class="bi bi-telephone me-1"></i>Call</a>
+                        @can('edit_leads')
+                        <button type="button" class="btn btn-light btn-sm flex-grow-1" data-role="reschedule-btn" data-action="{{ route('client.follow-ups.reschedule',$f) }}" data-current="{{ $f->follow_up_at->format('Y-m-d\TH:i') }}" data-lead="{{ $f->lead->name }}"><i class="bi bi-arrow-repeat me-1"></i>Reschedule</button>
+                        @endcan
+                        @can('complete_followups')
+                        <form method="POST" action="{{ route('client.follow-ups.complete',$f) }}" data-role="complete-form" class="flex-grow-1">@csrf
+                            <button class="btn btn-primary btn-sm w-100" data-role="complete-btn"><i class="bi bi-check2 me-1"></i>Done</button>
+                        </form>
+                        @endcan
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @endif
+</div>
+
 <div class="row g-3 mb-4">
     <div class="col-lg-8">
         <div class="card p-4 fade-up h-100">
@@ -208,10 +275,65 @@
     </div>
 </div>
 
+<div class="modal fade" id="rescheduleModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:14px">
+            <form method="POST" id="rescheduleForm">
+                @csrf
+                <div class="modal-header border-0 pb-0">
+                    <h6 class="fw-bold mb-0">Reschedule follow-up — <span id="rescheduleLeadName"></span></h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="muted small mb-1">New date &amp; time</label>
+                    <input type="datetime-local" class="form-control mb-3" name="follow_up_at" id="rescheduleDate" required>
+                    <label class="muted small mb-1">Reason (optional)</label>
+                    <textarea class="form-control" name="reason" rows="2" placeholder="e.g. Customer asked to call tomorrow"></textarea>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-arrow-repeat me-1"></i>Reschedule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
 <script src="{{ asset('assets/vendor/chartjs/chart.umd.min.js') }}"></script>
+<script>
+document.querySelectorAll('[data-role="complete-form"]').forEach((form) => {
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const btn = form.querySelector('[data-role="complete-btn"]');
+        btn.disabled = true;
+        fetch(form.action, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'X-Requested-With': 'XMLHttpRequest' },
+        }).then((r) => {
+            if (!r.ok) throw new Error();
+            btn.closest('tr, .entity-card')?.remove();
+            showToast('Follow-up completed.', 'success');
+        }).catch(() => { btn.disabled = false; showToast('Could not complete follow-up.', 'error'); });
+    });
+});
+
+(function () {
+    const modalEl = document.getElementById('rescheduleModal');
+    if (!modalEl) return;
+    const modal = new bootstrap.Modal(modalEl);
+    document.querySelectorAll('[data-role="reschedule-btn"]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            document.getElementById('rescheduleForm').action = btn.dataset.action;
+            document.getElementById('rescheduleDate').value = btn.dataset.current;
+            document.getElementById('rescheduleLeadName').textContent = btn.dataset.lead;
+            modal.show();
+        });
+    });
+})();
+</script>
 <script>
 (function () {
     const seed = @json($chart);

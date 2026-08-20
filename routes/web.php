@@ -74,6 +74,7 @@ Route::middleware(['auth', 'role:Admin|Staff|Telecaller', 'client.active'])->pre
     Route::get('follow-ups', [ClientFollowUpController::class, 'index'])->name('follow-ups.index');
     Route::get('follow-ups/calendar', [ClientFollowUpController::class, 'calendar'])->name('follow-ups.calendar');
     Route::post('follow-ups/{followUp}/complete', [ClientFollowUpController::class, 'complete'])->name('follow-ups.complete');
+    Route::post('follow-ups/{followUp}/reschedule', [ClientFollowUpController::class, 'reschedule'])->name('follow-ups.reschedule');
     Route::post('leads/{lead}/follow-ups', [ClientFollowUpController::class, 'store'])->name('leads.follow-ups.store');
     Route::post('leads/{lead}/whatsapp', [ClientLeadController::class, 'sendWhatsApp'])->name('leads.whatsapp');
 
@@ -111,5 +112,8 @@ Route::middleware(['auth', 'role:Admin|Staff|Telecaller', 'client.active'])->pre
         Route::delete('settings/custom-fields/{customField}', [\App\Http\Controllers\Client\CustomFieldController::class, 'destroy'])->name('custom-fields.destroy');
 
         Route::get('audit-logs', [\App\Http\Controllers\Client\AuditLogController::class, 'index'])->name('audit-logs.index');
+
+        Route::get('reports', [\App\Http\Controllers\Client\ReportController::class, 'index'])->name('reports.index');
+        Route::get('reports/export', [\App\Http\Controllers\Client\ReportController::class, 'export'])->name('reports.export');
     });
 });

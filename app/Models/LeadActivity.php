@@ -28,6 +28,7 @@ class LeadActivity extends Model
         'status_change' => 'bi-arrow-left-right',
         'assigned' => 'bi-person-check',
         'follow_up_completed' => 'bi-check2-circle',
+        'follow_up_rescheduled' => 'bi-arrow-repeat',
         'tag' => 'bi-tag',
     ];
 

@@ -50,6 +50,9 @@
             <a class="side-link {{ request()->routeIs('client.staff.*') ? 'active' : '' }}" href="{{ route('client.staff.index') }}">
                 <i class="bi bi-people"></i><span class="label">Staff</span>
             </a>
+            <a class="side-link {{ request()->routeIs('client.reports.*') ? 'active' : '' }}" href="{{ route('client.reports.index') }}">
+                <i class="bi bi-bar-chart"></i><span class="label">Reports</span>
+            </a>
             <a class="side-link {{ request()->routeIs('client.lead-form.*') ? 'active' : '' }}" href="{{ route('client.lead-form.index') }}">
                 <i class="bi bi-link-45deg"></i><span class="label">Lead Capture Form</span>
             </a>

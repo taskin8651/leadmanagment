@@ -22,12 +22,20 @@ class FollowUpController extends Controller
     public function index(Request $request)
     {
         $clientId = Auth::user()->client->id;
-        $followUps = FollowUp::with('lead')
-            ->whereHas('lead', fn ($q) => $q->where('client_id', $clientId))
-            ->when($request->status, fn ($q, $s) => $q->where('status', $s))
-            ->orderBy('follow_up_at')
-            ->paginate(20)
-            ->withQueryString();
+        $isOwner = Auth::user()->hasRole('Admin');
+        $query = FollowUp::with('lead')
+            ->whereHas('lead', fn ($q) => $q->where('client_id', $clientId));
+        if (!$isOwner) {
+            $query->where(fn ($q) => $q->where('assigned_to', Auth::id())->orWhereNull('assigned_to'));
+        }
+        $query->when($request->status, fn ($q, $s) => $q->where('status', $s));
+        match ($request->get('when')) {
+            'today' => $query->whereDate('follow_up_at', today()),
+            'overdue' => $query->where('follow_up_at', '<', now())->where('status', 'pending'),
+            'upcoming' => $query->where('follow_up_at', '>', now()->endOfDay()),
+            default => null,
+        };
+        $followUps = $query->orderBy('follow_up_at')->paginate(20)->withQueryString();
         return view('client.follow-ups.index', compact('followUps'));
     }
 
@@ -70,6 +78,39 @@ class FollowUpController extends Controller
         $lead->logActivity('note', 'Follow-up scheduled for ' . \Carbon\Carbon::parse($data['follow_up_at'])->format('d M Y, h:i A'));
 
         return back()->with('success', 'Follow-up scheduled.');
+    }
+
+    public function reschedule(Request $request, FollowUp $followUp)
+    {
+        abort_unless($followUp->lead->client_id === Auth::user()->client->id, 403);
+        abort_unless(Auth::user()->can('edit_leads'), 403);
+        abort_unless($followUp->status === 'pending', 422);
+
+        $data = $request->validate([
+            'follow_up_at' => ['required', 'date'],
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $old = $followUp->follow_up_at;
+        $followUp->update([
+            'follow_up_at' => $data['follow_up_at'],
+            'reschedule_count' => $followUp->reschedule_count + 1,
+        ]);
+
+        $lead = $followUp->lead;
+        if (!$lead->next_follow_up_at || $old->equalTo($lead->next_follow_up_at) || $data['follow_up_at'] < $lead->next_follow_up_at) {
+            $lead->update(['next_follow_up_at' => $data['follow_up_at']]);
+        }
+        $lead->logActivity(
+            'follow_up_rescheduled',
+            'Follow-up rescheduled from ' . $old->format('d M Y, h:i A') . ' to ' . \Carbon\Carbon::parse($data['follow_up_at'])->format('d M Y, h:i A') . ($data['reason'] ? ' — ' . $data['reason'] : ''),
+            ['from' => $old->toIso8601String(), 'to' => $data['follow_up_at']]
+        );
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+        return back()->with('success', 'Follow-up rescheduled.');
     }
 
     public function complete(FollowUp $followUp)

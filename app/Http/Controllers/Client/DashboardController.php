@@ -48,6 +48,12 @@ class DashboardController extends Controller
 
         $followUpScope = fn () => FollowUp::whereHas('lead', fn ($q) => $this->scopeVisible($q));
 
+        $todaysCalls = $followUpScope()->with('lead')
+            ->whereDate('follow_up_at', today())
+            ->where('status', 'pending')
+            ->orderBy('follow_up_at')
+            ->get();
+
         $staffPerformance = null;
         $sourceRoi = null;
         if (Auth::user()->hasRole('Admin')) {
@@ -93,7 +99,8 @@ class DashboardController extends Controller
             'wonLeads' => $wonLeads,
             'wonDelta' => $this->pctChange($wonThisMonth, $wonLastMonth),
             'conversionRate' => $totalLeads ? round(($wonLeads / $totalLeads) * 100, 1) : 0,
-            'todayFollowUps' => $followUpScope()->whereDate('follow_up_at', today())->where('status', 'pending')->count(),
+            'todayFollowUps' => $todaysCalls->count(),
+            'todaysCalls' => $todaysCalls,
             'overdueFollowUps' => $followUpScope()->where('follow_up_at', '<', now())->where('status', 'pending')->count(),
             'recentLeads' => $this->scopeVisible(Lead::query())->latest()->take(8)->get(),
             'chart' => app(AnalyticsController::class)->build(30),
