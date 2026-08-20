@@ -285,6 +285,8 @@ class LeadController extends Controller
         return back()->with('success', 'Note added.');
     }
 
+    public const CALL_OUTCOMES = ['Connected', 'Not Answered', 'Busy', 'Switched Off', 'Wrong Number', 'Call Back Later'];
+
     public function logInteraction(Request $request, Lead $lead)
     {
         $this->authorizeLead($lead);
@@ -292,8 +294,15 @@ class LeadController extends Controller
             'type' => ['required', 'in:call,whatsapp,email'],
             'outcome' => ['nullable', 'string', 'max:500'],
         ]);
-        $lead->logActivity($data['type'], ($data['outcome'] ?? null) ?: ucfirst($data['type']) . ' logged');
+        $lead->logActivity(
+            $data['type'],
+            ($data['outcome'] ?? null) ?: ucfirst($data['type']) . ' logged',
+            $data['type'] === 'call' && !empty($data['outcome']) ? ['outcome' => $data['outcome']] : []
+        );
         $lead->markFirstResponse();
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json(['success' => true]);
+        }
         return back()->with('success', ucfirst($data['type']) . ' logged.');
     }
 

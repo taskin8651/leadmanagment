@@ -36,7 +36,7 @@ class ReportController extends Controller
         $matrix = [];
         $touch = function ($day, $userId) use (&$matrix) {
             $matrix[$day][$userId] ??= [
-                'leads_assigned' => 0, 'interactions' => 0, 'rescheduled' => 0,
+                'leads_assigned' => 0, 'interactions' => 0, 'connected' => 0, 'rescheduled' => 0,
                 'completed' => 0, 'pending' => 0, 'missed' => 0, 'won' => 0, 'lost' => 0,
             ];
             return $matrix[$day][$userId];
@@ -68,6 +68,21 @@ class ReportController extends Controller
             if (!$row->user_id) continue;
             $touch($row->day, $row->user_id);
             $matrix[$row->day][$row->user_id]['interactions'] = (int) $row->cnt;
+        }
+
+        $connected = LeadActivity::query()
+            ->join('leads', 'leads.id', '=', 'lead_activities.lead_id')
+            ->where('leads.client_id', $clientId)
+            ->where('lead_activities.type', 'call')
+            ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(lead_activities.meta, '$.outcome')) = 'Connected'")
+            ->whereBetween('lead_activities.created_at', [$from, $to])
+            ->selectRaw('DATE(lead_activities.created_at) as day, lead_activities.user_id as user_id, COUNT(*) as cnt')
+            ->groupBy('day', 'lead_activities.user_id')
+            ->get();
+        foreach ($connected as $row) {
+            if (!$row->user_id) continue;
+            $touch($row->day, $row->user_id);
+            $matrix[$row->day][$row->user_id]['connected'] = (int) $row->cnt;
         }
 
         $rescheduled = LeadActivity::query()
@@ -150,6 +165,7 @@ class ReportController extends Controller
         $totals = [
             'leads_assigned' => $data['rows']->sum('leads_assigned'),
             'interactions' => $data['rows']->sum('interactions'),
+            'connected' => $data['rows']->sum('connected'),
             'rescheduled' => $data['rows']->sum('rescheduled'),
             'completed' => $data['rows']->sum('completed'),
             'pending' => $data['rows']->sum('pending'),

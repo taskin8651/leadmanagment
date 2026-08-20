@@ -29,6 +29,7 @@ class LeadActivity extends Model
         'assigned' => 'bi-person-check',
         'follow_up_completed' => 'bi-check2-circle',
         'follow_up_rescheduled' => 'bi-arrow-repeat',
+        'follow_up_missed' => 'bi-x-octagon',
         'tag' => 'bi-tag',
     ];
 

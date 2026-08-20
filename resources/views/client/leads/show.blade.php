@@ -55,6 +55,12 @@
             @endcan
         </div>
     </div>
+    <div class="d-flex align-items-center gap-2 mt-3 flex-wrap">
+        <span class="muted small">Log call outcome:</span>
+        @foreach(\App\Http\Controllers\Client\LeadController::CALL_OUTCOMES as $outcome)
+            <button type="button" class="btn btn-sm btn-light" data-log-outcome="{{ $outcome }}">{{ $outcome }}</button>
+        @endforeach
+    </div>
 </div>
 
 <ul class="nav tab-underline mb-3 fade-up" role="tablist">
@@ -324,6 +330,21 @@ document.querySelectorAll('[data-log-interaction]').forEach((el) => {
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
             body: JSON.stringify({ type: el.dataset.logInteraction }),
         });
+    });
+});
+
+document.querySelectorAll('[data-log-outcome]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+        btn.disabled = true;
+        fetch(@json(route('client.leads.interaction',$lead)), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ type: 'call', outcome: btn.dataset.logOutcome }),
+        }).then((r) => {
+            if (!r.ok) throw new Error();
+            showToast('Call outcome logged: ' + btn.dataset.logOutcome, 'success');
+        }).catch(() => showToast('Could not log call outcome.', 'error'))
+          .finally(() => { btn.disabled = false; });
     });
 });
 </script>

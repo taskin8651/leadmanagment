@@ -38,6 +38,12 @@
     <div class="col-6 col-xl-3"><x-stat-card icon="bi-arrow-repeat" label="Rescheduled" :value="$totals['rescheduled']" color="warning" /></div>
     <div class="col-6 col-xl-3"><x-stat-card icon="bi-check2-circle" label="Follow-ups Completed" :value="$totals['completed']" color="success" /></div>
 </div>
+<div class="row g-3 mb-4 stagger">
+    <div class="col-6 col-xl-3"><x-stat-card icon="bi-telephone-inbound" label="Connected Calls" :value="$totals['connected']" color="success" /></div>
+    <div class="col-6 col-xl-3"><x-stat-card icon="bi-hourglass-split" label="Follow-ups Pending" :value="$totals['pending']" color="info" /></div>
+    <div class="col-6 col-xl-3"><x-stat-card icon="bi-x-octagon" label="Follow-ups Missed" :value="$totals['missed']" color="{{ $totals['missed'] > 0 ? 'warning' : 'success' }}" /></div>
+    <div class="col-6 col-xl-3"><x-stat-card icon="bi-trophy" label="Won" :value="$totals['won']" color="primary" /></div>
+</div>
 
 <div class="card fade-up">
     @if($rows->isEmpty())
@@ -48,7 +54,7 @@
                 <thead>
                 <tr>
                     <th>Date</th><th>Telecaller</th><th class="text-center">Leads Assigned</th><th class="text-center">Calls</th>
-                    <th class="text-center">Rescheduled</th><th class="text-center">Completed</th><th class="text-center">Pending</th>
+                    <th class="text-center">Connected</th><th class="text-center">Rescheduled</th><th class="text-center">Completed</th><th class="text-center">Pending</th>
                     <th class="text-center">Missed</th><th class="text-center">Won</th><th class="text-center">Lost</th>
                 </tr>
                 </thead>
@@ -59,6 +65,7 @@
                         <td class="row-title">{{ $row['telecaller'] }}</td>
                         <td class="text-center">{{ $row['leads_assigned'] }}</td>
                         <td class="text-center">{{ $row['interactions'] }}</td>
+                        <td class="text-center">{{ $row['connected'] }}</td>
                         <td class="text-center">@if($row['rescheduled'] > 0)<span class="badge badge-warning">{{ $row['rescheduled'] }}</span>@else 0 @endif</td>
                         <td class="text-center">{{ $row['completed'] }}</td>
                         <td class="text-center">{{ $row['pending'] }}</td>

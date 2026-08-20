@@ -14,6 +14,8 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('followups:remind')->everyFifteenMinutes();
         $schedule->command('leads:sla-check')->hourly();
+        $schedule->command('followups:mark-missed')->hourly();
+        $schedule->command('followups:daily-summary')->dailyAt('08:00');
     }
 
     /**

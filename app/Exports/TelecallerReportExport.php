@@ -20,7 +20,7 @@ class TelecallerReportExport implements FromCollection, WithHeadings, WithMappin
 
     public function headings(): array
     {
-        return ['Date', 'Telecaller', 'Leads Assigned', 'Calls/Interactions', 'Rescheduled', 'Follow-ups Completed', 'Follow-ups Pending', 'Follow-ups Missed', 'Won', 'Lost'];
+        return ['Date', 'Telecaller', 'Leads Assigned', 'Calls/Interactions', 'Connected Calls', 'Rescheduled', 'Follow-ups Completed', 'Follow-ups Pending', 'Follow-ups Missed', 'Won', 'Lost'];
     }
 
     public function map($row): array
@@ -30,6 +30,7 @@ class TelecallerReportExport implements FromCollection, WithHeadings, WithMappin
             $row['telecaller'],
             $row['leads_assigned'],
             $row['interactions'],
+            $row['connected'],
             $row['rescheduled'],
             $row['completed'],
             $row['pending'],
